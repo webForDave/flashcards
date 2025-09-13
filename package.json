@@ -1,0 +1,24 @@
+{
+  "name": "flashcard-api-",
+  "version": "1.0.0",
+  "description": "Create better study techniques for study by creating digital flashcards that help accomplish this daunting task in a digital world.",
+  "homepage": "https://github.com/webForDave/flashcard-API-#readme",
+  "bugs": {
+    "url": "https://github.com/webForDave/flashcard-API-/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webForDave/flashcard-API-.git"
+  },
+  "license": "ISC",
+  "author": "David Akinola",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.18.1"
+  }
+}
