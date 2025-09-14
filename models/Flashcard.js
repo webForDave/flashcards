@@ -7,4 +7,4 @@ const flashcardSchema = mongoose.Schema({
     answer: {type: String, required: true},
 })
 
-module.exports = mongoose.model("Flachcard", flashcardSchema);
+module.exports = mongoose.model("Flashcard", flashcardSchema);
