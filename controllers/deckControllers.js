@@ -105,10 +105,46 @@ const deleteDeck = async(req, res, next) => {
     }
 }
 
+const study = async (req, res, next) => {
+    let {title} = req.params;
+    let deck = await Deck.findOne({title: title}).populate("flashcards");
+
+    if (!deck) {
+        return res.status(404).json({
+            error: "Deck not found"
+        })
+    }
+
+    try {
+        if (deck.flashcards.length == 0) {
+            return res.status(404).json({
+                error: "No flashcards found in this deck"
+            })
+        }
+
+        let question, answer;
+        let studyCards = [];
+
+        deck.flashcards.forEach(flashcard => {
+            question = flashcard.question,
+            answer = flashcard.answer
+
+            studyCards.push({"question": question, "answer": answer});
+        })
+        return res.status(200).json({
+            flashcards: studyCards
+        })
+    } catch (error) {
+        next(error);
+    }
+
+}
+
 module.exports = {
     createDeck,
     deckDetail,
     allDecks,
     updateDeck,
-    deleteDeck
+    deleteDeck,
+    study,
 }

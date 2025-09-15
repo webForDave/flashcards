@@ -154,10 +154,46 @@ const deleteFlashcard = async (req, res, next) => {
     }
 }
 
+const mark = async (req, res, next) => {
+    let deck = await getDeck(req, res, next);
+
+    if (deck == "Deck not found") {
+        return res.status(404).json({
+            error: "Deck not found"
+        })
+    }
+
+    let {flashcardID, status} = req.params; 
+    let statusArray = ["unknown", "known"];
+
+    if (!statusArray.includes(status)) {
+        return res.status(400).json({
+            error: "Status must either be known or unknown"
+        })
+    }
+
+    try {
+        let flashcard = await Flashcard.findOneAndUpdate({_id: flashcardID}, {status: status}, {new: true})
+
+        if (!flashcard) {
+            return res.status(404).json({
+                error: "Flashcard not found"
+            })
+        }
+
+        return res.status(200).json({
+            "message": `Flashcard marked as ${status}`
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getFlashcards,
     createFlashcard,
     flashcardDetail,
     updateFlashcard,
     deleteFlashcard,
+    mark,
 }
