@@ -14,7 +14,7 @@ const allDecks = async(req, res, next) => {
 }
 
 const createDeck = async(req, res, next) => {
-    if (!req.body|| !req.body.title || !req.body.description) {
+    if (!req.body|| !req.body.title || !req.body.description || req.body.title.trim() == "" || req.body.description.trim() == "") {
         return res.status(400).json({
             error: "A deck title and its description must be provided"
         })
@@ -55,9 +55,15 @@ const deckDetail = async(req, res, next) => {
 
 const updateDeck = async(req, res, next) => {
 
-    if (!req.body || Object.keys(req.body).length == 0 || !req.body.title || !req.body.description ){
+    if (!req.body || Object.keys(req.body).length == 0){
         return res.status(400).json({
             error: "The request body cannot be empty for updating a deck."
+        })
+    }
+
+    if (!req.body.title || !req.body.description || req.body.title.trim() == "" || req.body.description.trim() == "") {
+        return res.status(400).json({
+            error: "A title and its description must be provided for updating a deck"
         })
     }
 

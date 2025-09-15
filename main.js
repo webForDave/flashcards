@@ -3,6 +3,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const deckRoute = require("./routes/deckRoute");
+const flashcardRoute = require("./routes/flashcardRoute");
 const errorControllers = require("./controllers/errorControllers");
 const localDBUrl = "mongodb://localhost:27017/flashcards_db";
 
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 app.use("/api/decks", deckRoute);
+app.use("/api/decks", flashcardRoute);
 
 app.use(errorControllers.notFoundError);
 app.use(errorControllers.internalServerError);
