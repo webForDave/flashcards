@@ -7,6 +7,9 @@ const flashcardRoutes = require("./routes/flashcardRoutes");
 const authRoutes = require("./routes/authRoutes");
 const errorControllers = require("./controllers/errorControllers");
 const localDBUrl = "mongodb://localhost:27017/flashcards_db";
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const app = express();
 
@@ -23,7 +26,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 app.use("/api/auth", authRoutes);
-app.use("/api", deckRoutes);
+app.use("/api/decks", deckRoutes);
 app.use("/api", flashcardRoutes);
 
 app.use(errorControllers.notFoundError);

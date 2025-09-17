@@ -2,13 +2,14 @@
 
 const Router = require("express").Router();
 const deckControllers = require("../controllers/deckControllers");
+const { protect } = require("../controllers/authMiddleware");
 
-Router.get("/@/:userID/decks", deckControllers.allDecks);
-Router.get("/@/:userID/decks/:deckID/study", deckControllers.study);
-Router.get("/@/:userID/decks/:deckID/progress", deckControllers.progress);
-Router.post("/@/:userID/decks/create", deckControllers.createDeck);
-Router.get("/@/:userID/decks/:deckID", deckControllers.deckDetail);
-Router.put("/@/:userID/decks/:deckID/update", deckControllers.updateDeck);
-Router.delete("/@/:userID/decks/:deckID/delete", deckControllers.deleteDeck);
+Router.get("/", protect, deckControllers.allDecks);
+Router.get("/:deckID/study", protect, deckControllers.study);
+Router.get("/:deckID/progress", protect, deckControllers.progress);
+Router.post("/create", protect, deckControllers.createDeck);
+Router.get("/:deckID", protect, deckControllers.deckDetail);
+Router.put("/:deckID/update", protect, deckControllers.updateDeck);
+Router.delete("/:deckID/delete", protect, deckControllers.deleteDeck);
 
 module.exports = Router;

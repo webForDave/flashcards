@@ -14,9 +14,8 @@ const getUser = async (userID) => {
 }
 
 const allDecks = async(req, res, next) => {
-    let {userID } = req.params;
     try {
-        let user = await getUser(userID);
+        let user = await getUser(req.user.id);
 
         if (user == "error") {
             return res.status(404).json({error: "User not found "})
@@ -32,8 +31,7 @@ const allDecks = async(req, res, next) => {
 }
 
 const createDeck = async(req, res, next) => {
-    let {userID } = req.params;
-    const user = await getUser(userID);
+    const user = await getUser(req.user.id);
 
     if(user == "error") {
         return res.status(404).json({error: "User not found"});
@@ -47,7 +45,7 @@ const createDeck = async(req, res, next) => {
         let {title, description} = req.body;
         let deck = await Deck.create({title: title, description: description});
         user.decks.unshift(deck);
-        user.save();
+        await user.save();
 
         return res.status(201).json({
             message: "Deck created successfully",
@@ -60,8 +58,8 @@ const createDeck = async(req, res, next) => {
 
 
 const deckDetail = async(req, res, next) => {
-    let {userID, deckID} = req.params;
-    const user = await getUser(userID);
+    let {deckID} = req.params;
+    const user = await getUser(req.user.id);
 
     if(user == "error") {
         return res.status(404).json({error: "User not found"});
@@ -84,8 +82,8 @@ const deckDetail = async(req, res, next) => {
 }
 
 const updateDeck = async(req, res, next) => {
-    let {userID, deckID} = req.params;
-    const user = await getUser(userID);
+    let {deckID} = req.params;
+    const user = await getUser(req.user.id);
 
     if(user == "error") {
         return res.status(404).json({error: "user not found"})
@@ -116,8 +114,8 @@ const updateDeck = async(req, res, next) => {
 }
 
 const deleteDeck = async(req, res, next) => {
-    let {deckID, userID} = req.params;
-    let user = await getUser(userID);
+    let {deckID} = req.params;
+    let user = await getUser(req.user.id);
 
     if(user == "error") {
         return res.status(404).json({error: "user not found"})

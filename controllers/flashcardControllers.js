@@ -30,9 +30,8 @@ const getUser = async (userID) => {
 
 const getFlashcards = async (req, res, next) => {
     try {
-        let {userID } = req.params;
         let deck = await getDeck(req, res, next);
-        let user = await getUser(userID);
+        let user = await getUser(req.user.id);
 
         if (deck == "Deck not found") {
             return res.status(404).json({
@@ -53,8 +52,7 @@ const getFlashcards = async (req, res, next) => {
 
 const createFlashcard = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
-    let {userID } = req.params;
-    let user = await getUser(userID);
+    let user = await getUser(req.user.id);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
@@ -88,8 +86,7 @@ const createFlashcard = async (req, res, next) => {
 
 const flashcardDetail = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
-    let {userID } = req.params;
-    let user = await getUser(userID);
+    let user = await getUser(req.user.id);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
@@ -121,8 +118,7 @@ const flashcardDetail = async (req, res, next) => {
 
 const updateFlashcard = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
-    let {userID } = req.params;
-    let user = await getUser(userID);
+    let user = await getUser(req.user.id);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
@@ -167,8 +163,7 @@ const updateFlashcard = async (req, res, next) => {
 
 const deleteFlashcard = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
-    let {userID } = req.params;
-    let user = await getUser(userID);
+    let user = await getUser(req.user.id);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
@@ -200,8 +195,7 @@ const deleteFlashcard = async (req, res, next) => {
 
 const mark = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
-    let {userID } = req.params;
-    let user = await getUser(userID);
+    let user = await getUser(req.user.id);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
