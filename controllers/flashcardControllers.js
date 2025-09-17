@@ -5,26 +5,32 @@ const Flashcard = require("../models/Flashcard");
 const User = require("../models/User");
 
 const getDeck = async (req, res, next) => {
-    let {deckID} = req.params;
-    try {
-        let deck = await Deck.findOne({_id: deckID}).populate("flashcards");
+    try{
+        /**
+         * Utility function to fetch a deck from the database
+         * Also gets (populates) the flashcards objects array not their IDs
+         */
 
-        if (!deck) {
-            return "Deck not found"
-        }
+        // query the database to find a deck with id: deckID & (populate) the actual array of flashcards not their IDs
+        let deck = await Deck.findOne({_id: req.params.deckID}).populate("flashcards");
+
+        // return "error" if no deck is found
+        if (!deck) return;
         return deck;
     } catch (error) {
-        next(error)
+        next(error);
     }
 }
 
 const getUser = async (userID) => {
-
+    /**
+     * Utility function to get a user from the database
+     * Also gets (populates) the actual decks arrays from the user decks field 
+     */
     let user = await User.findOne({_id: userID}).populate("decks");
 
-    if (!user) {
-        return "error";
-    }
+    // return "error" if no user matches the filter
+    if (!user) return;
     return user
 }
 
@@ -33,14 +39,9 @@ const getFlashcards = async (req, res, next) => {
         let deck = await getDeck(req, res, next);
         let user = await getUser(req.user.id);
 
-        if (deck == "Deck not found") {
-            return res.status(404).json({
-                error: "Deck not found"
-            })
-        } 
-        if (user == "error") {
-            return res.status(404).json({error: "User not found "})
-        }
+        if (!deck) return res.status(404).json({error: "Deck not found"});
+        if (!user) return res.status(401).json({error: "User not found "});
+
         return res.status(200).json({
             deck: deck.title,
             flashcards: deck.flashcards
@@ -51,27 +52,22 @@ const getFlashcards = async (req, res, next) => {
 }
 
 const createFlashcard = async (req, res, next) => {
-    let deck = await getDeck(req, res, next);
-    let user = await getUser(req.user.id);
-
-    if (deck == "Deck not found") {
-        return res.status(404).json({
-            error: "Deck not found"
-        })
-    }
-
-    if (user == "error") {
-        return res.status(404).json({error: "User not found "})
-    }
-
-    if (!req.body || !req.body.question || !req.body.answer || req.body.question.trim() == "" || req.body.answer.trim() == "") {
-        return res.status(400).json({
-            error: "A flashcard question and its answer must be provided"
-        })
-    }
-    let {question, answer} = req.body;
     try {
+        const deck = await getDeck(req, res, next);
+        const user = await getUser(req.user.id);
+
+        if (!deck) return res.status(404).json({error: "Deck not found"});
+        if (!user) return res.status(401).json({error: "User not found "});
+
+        if (!req.body || !req.body.question || !req.body.answer || req.body.question.trim() == "" || req.body.answer.trim() == "") {
+            return res.status(400).json({
+                error: "A flashcard question and its answer must be provided"
+            });
+        }
+        const {question, answer} = req.body;
+
         let flashcard = await Flashcard.create({question: question, answer: answer});
+        // adds the newly created flashcard to the top of the array
         deck.flashcards.unshift(flashcard);
         deck.save();
 
@@ -85,29 +81,18 @@ const createFlashcard = async (req, res, next) => {
 }
 
 const flashcardDetail = async (req, res, next) => {
-    let deck = await getDeck(req, res, next);
-    let user = await getUser(req.user.id);
-
-    if (deck == "Deck not found") {
-        return res.status(404).json({
-            error: "Deck not found"
-        })
-    }
-
-    if (user == "error") {
-        return res.status(404).json({error: "User not found "})
-    }
-
-    let {flashcardID} = req.params;
-    
     try {
-        const flashcard = await Flashcard.findById(flashcardID);
+        const deck = await getDeck(req, res, next);
+        const user = await getUser(req.user.id);
 
-        if (!flashcard) {
-            return res.status(404).json({
-                error: "Flashcard not found"
-            })
-        }
+        if (!deck) return res.status(404).json({error: "Deck not found"});
+        if (!user) return res.status(401).json({error: "User not found "});
+
+        const {flashcardID} = req.params;
+        let flashcard = await Flashcard.findOne({_id: flashcardID});
+
+        if (!flashcard) return res.status(404).json({error: "Flashcard not found"});
+
         return res.status(200).json({
             flashcard: flashcard
         })
@@ -117,41 +102,23 @@ const flashcardDetail = async (req, res, next) => {
 }
 
 const updateFlashcard = async (req, res, next) => {
-    let deck = await getDeck(req, res, next);
-    let user = await getUser(req.user.id);
-
-    if (deck == "Deck not found") {
-        return res.status(404).json({
-            error: "Deck not found"
-        })
-    }
-
-    if (user == "error") {
-        return res.status(404).json({error: "User not found "})
-    }
-
-    if (!req.body || Object.keys(req.body).length == 0){
-        return res.status(400).json({
-            error: "The request body cannot be empty for updating a deck."
-        })
-    }
-
-    if (!req.body.question || !req.body.answer) {
-        return res.status(400).json({
-            error: "A question and its answer must be provided for updating a flashcard"
-        })
-    }
-
-    let {flashcardID} = req.params;
-
     try {
+        const deck = await getDeck(req, res, next);
+        const user = await getUser(req.user.id);
+        const {flashcardID} = req.params;
+
+        if (!deck) return res.status(404).json({error: "Deck not found"})
+        if (!user) return res.status(401).json({error: "User not found "});
+
+        if (!req.body || !req.body.question || !req.body.answer || req.body.question.trim() == "" || req.body.answer.trim() == ""){
+            return res.status(400).json({
+                error: "Please provide the required fields (question & answer)"})
+        }
+
         let flashcard = await Flashcard.findByIdAndUpdate(flashcardID, req.body, {new: true});
 
-        if (!flashcard) {
-            return res.status(404).json({
-                error: "Flashcard not found"
-            })
-        }
+        if (!flashcard) return res.status(404).json({error: "Flashcard not found"});
+
         return res.status(200).json({
             flashcard: flashcard
         })
@@ -162,28 +129,17 @@ const updateFlashcard = async (req, res, next) => {
 }
 
 const deleteFlashcard = async (req, res, next) => {
-    let deck = await getDeck(req, res, next);
-    let user = await getUser(req.user.id);
-
-    if (deck == "Deck not found") {
-        return res.status(404).json({
-            error: "Deck not found"
-        })
-    }
-
-    if (user == "error") {
-        return res.status(404).json({error: "User not found "})
-    }
-
-    let {flashcardID} = req.params;
     try {
+        const deck = await getDeck(req, res, next);
+        const user = await getUser(req.user.id);
+        const {flashcardID} = req.params;
+
+        if (!deck) return res.status(404).json({error: "Deck not found"});
+        if (!user) return res.status(404).json({error: "User not found "});
+
         let result = await Flashcard.findByIdAndDelete(flashcardID);
 
-        if (!result || result.deletedCount == 0){
-            return res.status(404).json({
-                error: "Flashcard not found"
-            })
-        }
+        if (result.deletedCount == 0) return res.status(404).json({error: "Flashcard not found"});
 
         return res.status(200).json({
             message: "Flashcard deleted successfully"
@@ -194,36 +150,26 @@ const deleteFlashcard = async (req, res, next) => {
 }
 
 const mark = async (req, res, next) => {
-    let deck = await getDeck(req, res, next);
-    let user = await getUser(req.user.id);
-
-    if (deck == "Deck not found") {
-        return res.status(404).json({
-            error: "Deck not found"
-        })
-    }
-
-    if (user == "error") {
-        return res.status(404).json({error: "User not found "})
-    }
-
-    let {flashcardID, status} = req.params; 
-    let statusArray = ["unknown", "known"];
-
-    if (!statusArray.includes(status)) {
-        return res.status(400).json({
-            error: "Status must either be known or unknown"
-        })
-    }
-
     try {
+        const deck = await getDeck(req, res, next);
+        const user = await getUser(req.user.id);
+        const {flashcardID, status} = req.params; 
+        const statusArray = ["unknown", "known"];
+
+        if (!deck) return res.status(404).json({error: "Deck not found"});
+
+        if (!user) return res.status(404).json({error: "User not found "});
+
+        if (!statusArray.includes(status)) {
+            return res.status(400).json({
+                error: "Status must either be known or unknown"
+            });
+        }
+
+        // updates ony the status field of the flashcard model
         let flashcard = await Flashcard.findOneAndUpdate({_id: flashcardID}, {status: status}, {new: true})
 
-        if (!flashcard) {
-            return res.status(404).json({
-                error: "Flashcard not found"
-            })
-        }
+        if (!flashcard) return res.status(404).json({error: "Flashcard not found"});
 
         return res.status(200).json({
             "message": `Flashcard marked as ${status}`
