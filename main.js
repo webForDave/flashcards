@@ -23,8 +23,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 app.use("/api/auth", authRoutes);
-app.use("/api/decks", deckRoutes);
-app.use("/api/decks", flashcardRoutes);
+app.use("/api", deckRoutes);
+app.use("/api", flashcardRoutes);
 
 app.use(errorControllers.notFoundError);
 app.use(errorControllers.internalServerError);

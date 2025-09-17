@@ -1,11 +1,29 @@
 "use strict";
 
 const Deck = require("../models/Deck");
+const User = require("../models/User");
+
+const getUser = async (userID) => {
+
+    let user = await User.findOne({_id: userID}).populate("decks");
+
+    if (!user) {
+        return "error";
+    }
+    return user
+}
 
 const allDecks = async(req, res, next) => {
+    let {userID } = req.params;
     try {
-        let decks = await Deck.find({});
+        let user = await getUser(userID);
+
+        if (user == "error") {
+            return res.status(404).json({error: "User not found "})
+        }
+        let decks = user.decks;
         return res.status(200).json({
+            user: user._id,
             decks: decks 
         })
     } catch (error) {
@@ -14,15 +32,23 @@ const allDecks = async(req, res, next) => {
 }
 
 const createDeck = async(req, res, next) => {
+    let {userID } = req.params;
+    const user = await getUser(userID);
+
+    if(user == "error") {
+        return res.status(404).json({error: "User not found"});
+    }
     if (!req.body|| !req.body.title || !req.body.description || req.body.title.trim() == "" || req.body.description.trim() == "") {
         return res.status(400).json({
             error: "A deck title and its description must be provided"
         })
     }
     try {
-        let {title, description} = req.body
+        let {title, description} = req.body;
+        let deck = await Deck.create({title: title, description: description});
+        user.decks.unshift(deck);
+        user.save();
 
-        let deck = await Deck.create({title, description});
         return res.status(201).json({
             message: "Deck created successfully",
             deck: deck
@@ -34,9 +60,14 @@ const createDeck = async(req, res, next) => {
 
 
 const deckDetail = async(req, res, next) => {
-    let {title} = req.params;
+    let {userID, deckID} = req.params;
+    const user = await getUser(userID);
+
+    if(user == "error") {
+        return res.status(404).json({error: "User not found"});
+    }
     try {
-        let deck = await Deck.findOne({title})
+        let deck = user.decks.find(deck => deck._id == deckID);
 
         if (!deck) {
             return res.status(404).json({
@@ -47,29 +78,27 @@ const deckDetail = async(req, res, next) => {
             message: "Deck detail",
             deck: deck
         })
-
     } catch (error) {
         next(error);
     }
 }
 
 const updateDeck = async(req, res, next) => {
+    let {userID, deckID} = req.params;
+    const user = await getUser(userID);
 
-    if (!req.body || Object.keys(req.body).length == 0){
-        return res.status(400).json({
-            error: "The request body cannot be empty for updating a deck."
-        })
+    if(user == "error") {
+        return res.status(404).json({error: "user not found"})
     }
 
-    if (!req.body.title || !req.body.description || req.body.title.trim() == "" || req.body.description.trim() == "") {
+    if (!req.body || !req.body.title || !req.body.description || req.body.title.trim() == "" || req.body.description.trim() == "") {
         return res.status(400).json({
             error: "A title and its description must be provided for updating a deck"
         })
     }
-
-    let {title} = req.params;
     try {
-        let deck = await Deck.findOneAndUpdate({title}, req.body, {new: true});
+
+        let deck = await Deck.findOneAndUpdate({_id: deckID}, req.body, {new: true});
 
         if (!deck) {
             return res.status(404).json({
@@ -87,9 +116,15 @@ const updateDeck = async(req, res, next) => {
 }
 
 const deleteDeck = async(req, res, next) => {
-    let deckTitle = req.params.title;
+    let {deckID, userID} = req.params;
+    let user = await getUser(userID);
+
+    if(user == "error") {
+        return res.status(404).json({error: "user not found"})
+    }
+
     try {
-        let result = await Deck.deleteOne({title: deckTitle});
+        let result = await Deck.deleteOne({_id: deckID});
 
         if(result.deletedCount == 0) {
             return res.status(404).json({
@@ -106,8 +141,8 @@ const deleteDeck = async(req, res, next) => {
 }
 
 const study = async (req, res, next) => {
-    let {title} = req.params;
-    let deck = await Deck.findOne({title: title}).populate("flashcards");
+    let {deckID} = req.params;
+    let deck = await Deck.findOne({_id: deckID}).populate("flashcards");
 
     if (!deck) {
         return res.status(404).json({
@@ -141,8 +176,8 @@ const study = async (req, res, next) => {
 }
 
 const progress = async (req, res, next) => {
-    let {title} = req.params;
-    let deck = await Deck.findOne({title: title}).populate("flashcards");
+    let {deckID} = req.params;
+    let deck = await Deck.findOne({_id: deckID}).populate("flashcards");
 
     if (!deck) {
         return res.status(404).json({

@@ -15,6 +15,10 @@ const register = async (req, res, next) => {
             return res.status(400).json({error: "Please provide the required fields (email, username, & password"})
         }
 
+        if(password.length < 6) {
+            return res.status(400).json({error: "Password must contain six or more characters"});
+        }
+
         let hashedPassword = await bcrypt.hash(password, 10);
 
         let user = await User.create({username, email, password: hashedPassword});

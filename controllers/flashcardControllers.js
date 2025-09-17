@@ -2,11 +2,12 @@
 
 const Deck = require("../models/Deck");
 const Flashcard = require("../models/Flashcard");
+const User = require("../models/User");
 
 const getDeck = async (req, res, next) => {
-    let {deckTitle} = req.params;
+    let {deckID} = req.params;
     try {
-        let deck = await Deck.findOne({title: deckTitle}).populate("flashcards");
+        let deck = await Deck.findOne({_id: deckID}).populate("flashcards");
 
         if (!deck) {
             return "Deck not found"
@@ -17,27 +18,52 @@ const getDeck = async (req, res, next) => {
     }
 }
 
-const getFlashcards = async (req, res, next) => {
-    let deck = await getDeck(req, res, next);
+const getUser = async (userID) => {
 
-    if (deck == "Deck not found") {
-        return res.status(404).json({
-            error: "Deck not found"
-        })
-    } 
-    return res.status(200).json({
+    let user = await User.findOne({_id: userID}).populate("decks");
+
+    if (!user) {
+        return "error";
+    }
+    return user
+}
+
+const getFlashcards = async (req, res, next) => {
+    try {
+        let {userID } = req.params;
+        let deck = await getDeck(req, res, next);
+        let user = await getUser(userID);
+
+        if (deck == "Deck not found") {
+            return res.status(404).json({
+                error: "Deck not found"
+            })
+        } 
+        if (user == "error") {
+            return res.status(404).json({error: "User not found "})
+        }
+        return res.status(200).json({
             deck: deck.title,
             flashcards: deck.flashcards
         })
+    } catch (error) {
+        next(error)
+    }
 }
 
 const createFlashcard = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
+    let {userID } = req.params;
+    let user = await getUser(userID);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
             error: "Deck not found"
         })
+    }
+
+    if (user == "error") {
+        return res.status(404).json({error: "User not found "})
     }
 
     if (!req.body || !req.body.question || !req.body.answer || req.body.question.trim() == "" || req.body.answer.trim() == "") {
@@ -48,7 +74,7 @@ const createFlashcard = async (req, res, next) => {
     let {question, answer} = req.body;
     try {
         let flashcard = await Flashcard.create({question: question, answer: answer});
-        deck.flashcards.push(flashcard);
+        deck.flashcards.unshift(flashcard);
         deck.save();
 
         return res.status(201).json({
@@ -62,11 +88,17 @@ const createFlashcard = async (req, res, next) => {
 
 const flashcardDetail = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
+    let {userID } = req.params;
+    let user = await getUser(userID);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
             error: "Deck not found"
         })
+    }
+
+    if (user == "error") {
+        return res.status(404).json({error: "User not found "})
     }
 
     let {flashcardID} = req.params;
@@ -89,11 +121,17 @@ const flashcardDetail = async (req, res, next) => {
 
 const updateFlashcard = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
+    let {userID } = req.params;
+    let user = await getUser(userID);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
             error: "Deck not found"
         })
+    }
+
+    if (user == "error") {
+        return res.status(404).json({error: "User not found "})
     }
 
     if (!req.body || Object.keys(req.body).length == 0){
@@ -129,11 +167,17 @@ const updateFlashcard = async (req, res, next) => {
 
 const deleteFlashcard = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
+    let {userID } = req.params;
+    let user = await getUser(userID);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
             error: "Deck not found"
         })
+    }
+
+    if (user == "error") {
+        return res.status(404).json({error: "User not found "})
     }
 
     let {flashcardID} = req.params;
@@ -156,11 +200,17 @@ const deleteFlashcard = async (req, res, next) => {
 
 const mark = async (req, res, next) => {
     let deck = await getDeck(req, res, next);
+    let {userID } = req.params;
+    let user = await getUser(userID);
 
     if (deck == "Deck not found") {
         return res.status(404).json({
             error: "Deck not found"
         })
+    }
+
+    if (user == "error") {
+        return res.status(404).json({error: "User not found "})
     }
 
     let {flashcardID, status} = req.params; 
